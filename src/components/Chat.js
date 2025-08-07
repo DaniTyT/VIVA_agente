@@ -18,7 +18,7 @@ import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlin
 import PsychologyRoundedIcon from "@mui/icons-material/PsychologyRounded";
 import TableRowsRoundedIcon from "@mui/icons-material/TableRowsRounded";
 import AnswerDetailsDialog from "./AnswerDetailsDialog.js";
-import { WELCOME_MESSAGE, MAX_LENGTH_INPUT_SEARCH } from "../env";
+import { WELCOME_MESSAGE, MAX_LENGTH_INPUT_SEARCH, AGENT_ID, AGENT_ALIAS_ID } from "../env";
 import MyChart from "./MyChart.js";
 import Answering from "./Answering.js";
 import QueryResultsDisplay from "./QueryResultsDisplay";
@@ -101,6 +101,19 @@ const Chat = ({ userName = "Guest User" }) => {
     }
   };
 
+  // Función para guardar la información del agente en CSV en localStorage (sin descarga automática)
+  function saveAgentInfoToCSV({ fecha, modelId, agentId, agentVersionId, inputTokens, outputTokens }) {
+    const csvHeader = 'fecha,modelId,agentId,agentVersionId,inputTokens,outputTokens\n';
+    const csvRow = `${fecha},${modelId},${agentId},${agentVersionId},${inputTokens},${outputTokens}\n`;
+    let csvContent = localStorage.getItem('agentInfoCSV') || csvHeader;
+    // Si el header ya existe, no lo duplicamos
+    if (!csvContent.startsWith(csvHeader)) {
+      csvContent = csvHeader + csvContent;
+    }
+    csvContent += csvRow;
+    localStorage.setItem('agentInfoCSV', csvContent);
+  }
+
   const getAnswer = async (my_query) => {
     if (!loading && my_query !== "") {
       setControlAnswers((prevState) => [...prevState, {}]);
@@ -137,6 +150,16 @@ const Chat = ({ userName = "Guest User" }) => {
           queryUuid,
           countRationals
         };
+
+        // Guardar info relevante en CSV local usando solo datos del json recibido
+        // Variables listas para guardar información relevante (pero no se guarda nada)
+        const fecha = new Date().toISOString();
+        // Si en el futuro quieres guardar agentId y agentVersionId, usa estas variables:
+        const agentId = AGENT_ID || '';
+        const agentVersionId = AGENT_ALIAS_ID || '';
+        const inputTokens = totalInputTokens || 0;
+        const outputTokens = totalOutputTokens || 0;
+        //saveAgentInfoToCSV({ fecha, modelId, agentId, agentVersionId, inputTokens, outputTokens });
 
         // Intentar generar la gráfica siempre, usando la respuesta del agente
         json.chart = "loading";
